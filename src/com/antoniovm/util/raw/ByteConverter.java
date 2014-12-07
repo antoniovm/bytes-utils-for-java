@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.antoniovm.util.bytedataconvertion;
+package com.antoniovm.util.raw;
 
 /**
  * @author Antonio Vicente Martin
