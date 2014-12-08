@@ -15,53 +15,14 @@ public class ByteConverter {
 	 * Returns the corresponding byte inside the value
 	 * 
 	 * @param value
+	 *            The assembled value
 	 * @param position
-	 * @return
+	 *            The byte index
+	 * @return The byte value at the specified index
 	 */
 	public static byte getByteAt(long value, int position) {
 		byte byteSelected = (byte) (value >> 8 * position);
 		return byteSelected;
-	}
-
-	/**
-	 * Returns an int value splitted into a littleEndian byte array
-	 * 
-	 * @param value
-	 *            The int value
-	 * @return bytes The value's bytes
-	 */
-	public static byte[] toBytesArray(int value) {
-		return toBytesArray(value, 4, true);
-	}
-
-	/**
-	 * Returns an int value splitted into a byte array
-	 * 
-	 * @param value
-	 *            The int value
-	 * @param littleEndian
-	 *            The array of bytes endianess
-	 * @return bytes The value's bytes
-	 */
-	public static byte[] toBytesArray(int value, boolean littleEndian) {
-		return toBytesArray(value, 4, littleEndian);
-	}
-
-	/**
-	 * Returns a new array of bytes with the splitted value
-	 * 
-	 * @param value
-	 *            The vale to convert
-	 * @param numBytes
-	 *            The number of bytes
-	 * @param littleEndian
-	 *            The array of bytes endianess
-	 * @return bytes The array of bytes
-	 */
-	public static byte[] toBytesArray(long value, int numBytes, boolean littleEndian) {
-		byte[] bytes = new byte[numBytes];
-
-		return toBytesArray(value, bytes, littleEndian);
 	}
 
 	/**
@@ -73,10 +34,9 @@ public class ByteConverter {
 	 *            The array of bytes to write in
 	 * @param littleEndian
 	 *            The array of bytes endianess
-	 * @return bytes The value's bytes
 	 */
-	public static byte[] toBytesArray(long value, byte[] bytes, boolean littleEndian) {
-		return toBytesArray(value, bytes, 0, bytes.length, littleEndian);
+	public static void toBytesArray(long value, byte[] bytes, boolean littleEndian) {
+		toBytesArray(value, bytes, 0, bytes.length, littleEndian);
 	}
 
 	/**
@@ -92,9 +52,8 @@ public class ByteConverter {
 	 *            The end iterarion index
 	 * @param littleEndian
 	 *            The array of bytes endianess
-	 * @return bytes The value's bytes
 	 */
-	public static byte[] toBytesArray(long value, byte[] bytes, int start, int end, boolean littleEndian) {
+	public static void toBytesArray(long value, byte[] bytes, int start, int end, boolean littleEndian) {
 		int i = start;
 		int sum = 1;
 
@@ -108,7 +67,6 @@ public class ByteConverter {
 			bytes[j++] = getByteAt(value, i);
 		}
 
-		return bytes;
 	}
 
 	/**
@@ -143,23 +101,36 @@ public class ByteConverter {
 		int value = 0;
 
 		int i = 0;
-		int sum = 1;
+		int increment = 1;
 
 		// The index + bytesPerValue int bytes must be within array bounds
 		if (index + bytesPerValue > bytes.length) {
-			throw new IllegalArgumentException("At least " + bytesPerValue + " bytes needed.");
+			throw new ArrayIndexOutOfBoundsException("At least " + bytesPerValue + " bytes needed.");
 		}
+
+		// The last bound byte index
+		int lastByteIndex = index + bytesPerValue - 1;
+
+		// This is the most significative byte in big endian
+		int mostSignificativeByte = bytes[lastByteIndex];
 
 		if (littleEndian) {
 			// Reverse iteration
-			i = bytesPerValue - 1;
-			sum = -1;
+			increment = -1;
+
+			// Skip the MSB (-2 = - (lastBoundIndex + MSB))
+			i = bytesPerValue - 2;
+			mostSignificativeByte = bytes[index++];
+			lastByteIndex++;
 		}
 
-		for (int j = index; j < bytes.length && i < bytesPerValue && i >= 0; i += sum) {
-			// The bit and operation is used to get an unsigned value
-			// value += (bytes[j++] & 0xFF) << 8 * i;
-			value += bytes[j++] << 8 * i;
+		// Preserve sign
+		value += mostSignificativeByte << 8 * (bytesPerValue - 1);
+		
+		for (int j = index; j < lastByteIndex && i < bytesPerValue && i >= 0; i += increment) {
+			// The bit 'and' operation is used to get an unsigned value
+			value += (bytes[j++] & 0xFF) << 8 * i;
+			// value += bytes[j++] << 8 * i;
 		}
 
 		return value;
@@ -169,21 +140,29 @@ public class ByteConverter {
 	/**
 	 * Copies and converts the bytes array into a doubles array
 	 * 
-	 * @param from
-	 * @param startFrom
+	 * @param src
+	 *            The array to read
+	 * @param fromSrc
+	 *            The low index in src
 	 * @param sampleSize
-	 * @param to
-	 * @param startTo
-	 * @param endTo
+	 *            The size of the sample
+	 * @param dst
+	 *            The destination array
+	 * @param fromDst
+	 *            The low index in src
+	 * @param toDst
+	 *            The high index in src
 	 * @param normalize
+	 *            Write double data represented in values between 1.0 and 0.0
 	 * @param littleEndian
+	 *            Whether the src array is encoded in little endian or not
 	 */
-	public static void toDoublesArray(byte[] from, int startFrom, int sampleSize, double[] to, int startTo, int endTo,
+	public static void toDoublesArray(byte[] src, int fromSrc, int sampleSize, double[] dst, int fromDst, int toDst,
 			boolean normalize, boolean littleEndian) {
 		double normalizationCoefficient = normalize ? Math.pow(256, sampleSize) : 1.0;
 
-		for (int i = startTo; i < endTo; i++) {
-			to[i] = toValue(from, startFrom + i * sampleSize, sampleSize, littleEndian) / normalizationCoefficient;
+		for (int i = fromDst; i < toDst; i++) {
+			dst[i] = toValue(src, fromSrc + i * sampleSize, sampleSize, littleEndian) / normalizationCoefficient;
 		}
 
 	}
