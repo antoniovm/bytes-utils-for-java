@@ -141,12 +141,12 @@ public class Queue {
 		// If a negative value is computed, it means it's not necessary to do a displacement
 		if (numberOfBytesToDisplace > 0) {
 			// Move old values from ending to starting positions: |12345| = |345--|
-			System.arraycopy(dst, numberOfBytesToDisplace, dst, 0, dstSize);
+			System.arraycopy(dst, numberOfBytesToDisplace, dst, 0, dstSize - numberOfBytesToDisplace);
 			dstSize -= numberOfBytesToDisplace;
 		}
 
 		// Push new data
-		System.arraycopy(dst, dstSize, src, srcFrom, numberOfBytesToRead);
+		System.arraycopy(src, srcFrom, dst, dstSize, numberOfBytesToRead);
 
 		return remainingBytes;
 	}
