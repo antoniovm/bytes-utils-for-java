@@ -47,7 +47,7 @@ public class Queue {
 	 *            The byte array
 	 */
 	public Queue(byte[] data) {
-		this(data, 0, false);
+		this(data, data.length, false);
 	}
 
 	/**
@@ -264,4 +264,36 @@ public class Queue {
 	public void setCapacity(int capacity) {
 		this.capacity = capacity;
 	}
+
+	/**
+	 * Removes the first bytes from the queue
+	 * 
+	 * @param dst
+	 *            The output buffer to store removed data
+	 * @return The number of bytes removed
+	 */
+	public int pop(byte[] dst) {
+		int size = getSize();
+
+		if (size < 1) {
+			clear();
+			return 0;
+		}
+
+		int dataAmount = Math.min(getSize(), dst.length);
+		push(rawData, head, head + dataAmount, dst, 0);
+		head += dataAmount;
+
+		return dataAmount;
+
+	}
+
+	/**
+	 * Restores the initial values for the indexes
+	 */
+	private void clear() {
+		this.head = 0;
+		this.tail = 0;
+	}
 }
+
