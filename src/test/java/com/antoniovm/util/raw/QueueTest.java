@@ -23,14 +23,13 @@ public class QueueTest {
 	@Test
 	public void testPushNoDisplacement() {
 		byte[] test = { 1, 2, 0, 0, 0 };
-		Queue qTest = new Queue(0);
-		qTest.setData(test, 2);
+		Queue qTest = new Queue(test, 2);
 		byte[] newData = { 3, 4 };
 		byte[] expected = { 1, 2, 3, 4, 0 };
 
 		qTest.push(newData);
 
-		Assert.assertArrayEquals(expected, qTest.getData());
+		Assert.assertArrayEquals(expected, qTest.getRawData());
 	}
 
 	@Test
@@ -42,7 +41,7 @@ public class QueueTest {
 
 		qTest.push(newData);
 
-		Assert.assertArrayEquals(expected, qTest.getData());
+		Assert.assertArrayEquals(expected, qTest.getRawData());
 	}
 
 	@Test

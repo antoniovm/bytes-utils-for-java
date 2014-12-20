@@ -15,12 +15,20 @@ public class Queue {
 	/**
 	 * The byte array to store all data
 	 */
-	private byte[] data;
+	private byte[] rawData;
 
 	/**
-	 * The number of elements inside the array
+	 * The index to the first element
 	 */
-	private int size;
+	private int head;
+	/**
+	 * The index to the last element + 1
+	 */
+	private int tail;
+	/**
+	 * The capacity of the queue
+	 */
+	private int capacity;
 
 	/**
 	 * Creates a new RawQueue with a specified {@code capacity}
@@ -62,24 +70,10 @@ public class Queue {
 	 * @param size
 	 *            The initial data size
 	 * @param copy
-	 *            Whether the array is a copy or not
+	 *            Whether the array must be a copy or not
 	 */
 	public Queue(byte[] data, int size, boolean copy) {
-		// Throw an exception if size doesn't match
-		if (size > data.length) {
-			throw new ArrayIndexOutOfBoundsException("size:" + size + " can't be greater than capacity:" + data.length);
-		}
-
-		this.size = size;
-
-		if (copy) {
-			// Make a copy of the original
-			this.data = new byte[data.length];
-			System.arraycopy(data, 0, this.data, 0, data.length);
-		} else {
-			// Reference the argument object
-			this.data = data;
-		}
+		setRawData(data, size, copy);
 	}
 
 	/**
@@ -164,17 +158,18 @@ public class Queue {
 	 *         truncated.
 	 */
 	public int push(byte[] src, int srcFrom, int srcTo) {
-		int remainingBytes = push(src, srcFrom, srcTo, data, size);
+		moveToInitialPosition();
+		int remainingBytes = push(src, srcFrom, srcTo, rawData, getSize());
 
 		// Calculate the new size
 		int totalNewBytes = (srcTo - srcFrom);
 		
-		if ((totalNewBytes + size)>data.length) {
+		if ((totalNewBytes + getSize()) > getCapacity()) {
 			// Data overflow
-			size = data.length;
+			tail = getCapacity();
 		}else {
 			// Increment size
-			size += totalNewBytes;
+			tail += totalNewBytes;
 		}
 		
 		return remainingBytes;
@@ -193,10 +188,12 @@ public class Queue {
 	}
 
 	/**
+	 * Returns the raw data
+	 * 
 	 * @return the data
 	 */
-	public byte[] getData() {
-		return data;
+	public byte[] getRawData() {
+		return rawData;
 	}
 
 	/**
@@ -205,24 +202,66 @@ public class Queue {
 	 *            The raw byte data to set
 	 * @param size
 	 *            The size of the data to set
+	 * @param copy
+	 *            Whether the array must be a copy or not
 	 */
-	public void setData(byte[] data, int size) {
-		this.data = data;
-		this.size = size;
+	public void setRawData(byte[] data, int size, boolean copy) {
+		// Throw an exception if size doesn't match
+		if (size > data.length) {
+			throw new ArrayIndexOutOfBoundsException("size:" + size
+					+ " can't be greater than capacity:" + data.length);
+		}
+
+		this.capacity = size;
+		this.tail = size;
+
+		if (copy) {
+			// Make a copy of the original
+			this.rawData = new byte[data.length];
+			System.arraycopy(data, 0, this.rawData, 0, data.length);
+		} else {
+			// Reference the argument object
+			this.rawData = data;
+		}
 	}
 
 	/**
-	 * @param size
-	 *            The size of the data to set
-	 */
-	public void setSize(int size) {
-		this.size = size;
-	}
-
-	/**
-	 * @return the size
+	 * Return the size of the queue
+	 * 
+	 * @return The size of the queue
 	 */
 	public int getSize() {
-		return size;
+		return (tail - head);
+	}
+
+	/**
+	 * Move all data to first positions
+	 */
+	private void moveToInitialPosition() {
+		if (head > 0) {
+			int size = getSize();
+			System.arraycopy(rawData, head, rawData, 0, size);
+			tail = size;
+			head = 0;
+		}
+	}
+
+	/**
+	 * Return the capacity of the queue
+	 * 
+	 * @return The capacity of the queue
+	 */
+	public int getCapacity() {
+		return capacity;
+	}
+
+	/**
+	 * Sets the capacity of the queue
+	 * 
+	 * @param capacity
+	 *            The capacity of the queue
+	 */
+	public void setCapacity(int capacity) {
+		this.capacity = capacity;
 	}
 }
