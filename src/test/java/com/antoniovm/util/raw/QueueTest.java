@@ -23,13 +23,12 @@ public class QueueTest {
 	@Test
 	public void testPushNoDisplacement() {
 		byte[] test = { 1, 2, 0, 0, 0 };
-		Queue qTest = new Queue(test, 2);
 		byte[] newData = { 3, 4 };
 		byte[] expected = { 1, 2, 3, 4, 0 };
 
-		qTest.push(newData);
+		Queue.push(newData, test, 2);
 
-		Assert.assertArrayEquals(expected, qTest.getRawData());
+		Assert.assertArrayEquals(expected, test);
 	}
 
 	@Test
@@ -47,13 +46,12 @@ public class QueueTest {
 	@Test
 	public void testPushTruncate() {
 		byte[] test = { 1, 2, 3 };
-		Queue qTest = new Queue(test, test.length, true);
 		byte[] newData = { 6, 7, 8, 9 };
 		byte[] expected = { 7, 8, 9 };
 
-		qTest.push(newData);
+		Queue.push(newData, test, test.length);
 
-		Assert.assertArrayEquals(expected, qTest.getRawData());
+		Assert.assertArrayEquals(expected, test);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -92,18 +90,5 @@ public class QueueTest {
 		Assert.assertEquals(0, qTest.getSize());
 	}
 
-	@Test
-	public void testMoveToInitialPosition() {
-		byte[] test = { 1, 2, 3 };
-		Queue qTest = new Queue(test, test.length, true);
-		byte[] removedData = new byte[3];
-		byte[] newData = { 4, 5 };
-		byte[] expected = { 4, 5, 3 };
-
-		qTest.pop(removedData);
-		qTest.push(newData);
-
-		Assert.assertArrayEquals(expected, qTest.getRawData());
-	}
 
 }
