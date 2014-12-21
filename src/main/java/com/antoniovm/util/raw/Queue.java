@@ -15,6 +15,10 @@ public class Queue {
 	/**
 	 * The byte array to store all data
 	 */
+	private byte[] rawRingData;
+	/**
+	 * The byte array to return all data sorted
+	 */
 	private byte[] rawData;
 
 	/**
@@ -29,6 +33,10 @@ public class Queue {
 	 * The capacity of the queue
 	 */
 	private int capacity;
+	/**
+	 * The current size of the queue
+	 */
+	private int size;
 
 	/**
 	 * Creates a new RawQueue with a specified {@code capacity}
@@ -146,33 +154,56 @@ public class Queue {
 	}
 
 	/**
-	 * Pushes the {@code src} with specified {@code from} and {@code to} {@code src}'s indexes
+	 * Pushes the {@code src} with specified {@code from} and {@code to}
+	 * {@code src}'s indexes
 	 * 
 	 * @param src
 	 *            The byte array to read
 	 * @param srcFrom
 	 *            The start position to read
 	 * @param srcTo
-	 *            The ending position to read
-	 * @return The number of remaining original bytes. A negative value means that those number of {@code src} bytes are
-	 *         truncated.
+	 *            The ending position to read.
 	 */
-	public int push(byte[] src, int srcFrom, int srcTo) {
-		moveToInitialPosition();
-		int remainingBytes = push(src, srcFrom, srcTo, rawData, getSize());
+	public void push(byte[] src, int srcFrom, int srcTo) {
 
-		// Calculate the new size
-		int totalNewBytes = (srcTo - srcFrom);
-		
-		if ((totalNewBytes + getSize()) > getCapacity()) {
-			// Data overflow
-			tail = getCapacity();
-		}else {
-			// Increment size
-			tail += totalNewBytes;
+		// The total number of bytes are going to be read
+		int numberOfBytesToRead = srcTo - srcFrom;
+
+		// Throw an exception in case of bad indexes
+		if (numberOfBytesToRead < 1) {
+			throw new IllegalArgumentException("Bad src indexes. to:" + srcTo
+					+ " must be greater than from:" + srcFrom);
 		}
-		
-		return remainingBytes;
+
+		// Data overflow
+		if (src.length > capacity) {
+			push(src, srcFrom, srcTo, rawRingData, capacity);
+			head = 0;
+			tail = capacity;
+		}
+
+		int lastData = capacity - tail;
+		int freeSpace = capacity - size;
+
+		// If the right bound is reached, a src split is needed
+		if (lastData < numberOfBytesToRead) {
+			System.arraycopy(src, srcFrom, rawRingData, tail, lastData);
+			srcFrom += lastData;
+			tail = (tail + lastData) % capacity;
+			lastData = srcTo - lastData;
+		}
+
+		System.arraycopy(src, srcFrom, rawRingData, tail, lastData);
+		tail = (tail + lastData) % capacity;
+
+		// Check if head movement is needed
+		if (freeSpace < numberOfBytesToRead) {
+			int headOffset = numberOfBytesToRead - freeSpace;
+			head = (head + headOffset) % capacity;
+		}
+
+		size = Math.min(capacity, size + numberOfBytesToRead);
+
 	}
 
 	/**
@@ -180,11 +211,84 @@ public class Queue {
 	 * 
 	 * @param src
 	 *            The byte array to read
-	 * @return The number of remaining original bytes. A negative value means that those number of {@code src} bytes are
-	 *         truncated.
 	 */
-	public int push(byte[] src) {
-		return push(src, 0, src.length);
+	public void push(byte[] src) {
+		push(src, 0, src.length);
+	}
+
+	/**
+	 * Looks a the first bytes from the queue
+	 * 
+	 * @param dst
+	 *            The output buffer to store looked data
+	 * @param numberOfElements
+	 *            The number of elements to peek
+	 * @return The number of bytes looked
+	 */
+	public int peek(byte[] dst, int numberOfElements) {
+		if (isEmpty()) {
+			return 0;
+		}
+
+		numberOfElements = Math.min(numberOfElements, capacity);
+
+		int lastData = capacity - head;
+		int endIndex = (head + numberOfElements) % capacity;
+
+		// If ringed, a split copy is needed
+		if (head >= endIndex) {
+			System.arraycopy(rawRingData, head, dst, 0, lastData);
+			System.arraycopy(rawRingData, 0, dst, lastData, endIndex);
+		} else {
+			System.arraycopy(rawRingData, head, dst, 0, numberOfElements);
+		}
+
+		return numberOfElements;
+	}
+
+	/**
+	 * Removes the first bytes from the queue
+	 * 
+	 * @param dst
+	 *            The output buffer to store removed data
+	 * @param numberOfElements
+	 *            The number of elements to pop
+	 * @return The number of bytes removed
+	 */
+	public int pop(byte[] dst, int numberOfElements) {
+		numberOfElements = peek(dst, numberOfElements);
+
+		size -= numberOfElements;
+		head = (head + numberOfElements) % capacity;
+	
+		return numberOfElements;
+	}
+
+	/**
+	 * Removes the first bytes from the queue
+	 * 
+	 * @param dst
+	 *            The output buffer to store removed data
+	 * @return The number of bytes removed
+	 */
+	public int pop(byte[] dst) {
+		return pop(dst, dst.length);
+	}
+
+	/**
+	 * Copy all data in a new array in natural order
+	 */
+	private void setNaturalOrder() {
+		peek(rawData, size);
+	}
+
+	/**
+	 * Restores the initial values for the indexes
+	 */
+	public void clear() {
+		this.head = 0;
+		this.tail = 0;
+		this.size = 0;
 	}
 
 	/**
@@ -193,6 +297,7 @@ public class Queue {
 	 * @return the data
 	 */
 	public byte[] getRawData() {
+		setNaturalOrder();
 		return rawData;
 	}
 
@@ -212,17 +317,19 @@ public class Queue {
 					+ " can't be greater than capacity:" + data.length);
 		}
 
-		this.capacity = size;
+		this.capacity = data.length;
+		this.size = size;
 		this.tail = size;
 
 		if (copy) {
 			// Make a copy of the original
-			this.rawData = new byte[data.length];
-			System.arraycopy(data, 0, this.rawData, 0, data.length);
+			this.rawRingData = new byte[data.length];
+			System.arraycopy(data, 0, this.rawRingData, 0, data.length);
 		} else {
 			// Reference the argument object
-			this.rawData = data;
+			this.rawRingData = data;
 		}
+		this.rawData = new byte[data.length];
 	}
 
 	/**
@@ -231,19 +338,7 @@ public class Queue {
 	 * @return The size of the queue
 	 */
 	public int getSize() {
-		return (tail - head);
-	}
-
-	/**
-	 * Move all data to first positions
-	 */
-	private void moveToInitialPosition() {
-		if (head > 0) {
-			int size = getSize();
-			System.arraycopy(rawData, head, rawData, 0, size);
-			tail = size;
-			head = 0;
-		}
+		return size;
 	}
 
 	/**
@@ -266,34 +361,21 @@ public class Queue {
 	}
 
 	/**
-	 * Removes the first bytes from the queue
+	 * Checks if the queue is empty
 	 * 
-	 * @param dst
-	 *            The output buffer to store removed data
-	 * @return The number of bytes removed
+	 * @return true if is empty, false otherwise
 	 */
-	public int pop(byte[] dst) {
-		int size = getSize();
-
-		if (size < 1) {
-			clear();
-			return 0;
-		}
-
-		int dataAmount = Math.min(getSize(), dst.length);
-		push(rawData, head, head + dataAmount, dst, 0);
-		head += dataAmount;
-
-		return dataAmount;
-
+	public boolean isEmpty() {
+		return size == 0;
 	}
 
 	/**
-	 * Restores the initial values for the indexes
+	 * Checks if the queue is full
+	 * 
+	 * @return true if is full, false otherwise
 	 */
-	private void clear() {
-		this.head = 0;
-		this.tail = 0;
+	public boolean isFull() {
+		return size == capacity;
 	}
 }
 
