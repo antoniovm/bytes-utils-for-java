@@ -1,11 +1,14 @@
-/**
- * 
- */
 package com.antoniovm.util.raw;
 
+import java.util.ArrayList;
+
+import com.antoniovm.util.event.DataListener;
+
 
 /**
- * This class encapsulates a raw byte queue for handling byte streaming
+ * This class encapsulates a raw byte queue for handling byte streaming. It
+ * stores data in a ring queue but returns it in the natural order (from 0 to
+ * capacity) in an auxiliary byte array.
  * 
  * @author Antonio Vicente Martin
  *
@@ -20,7 +23,6 @@ public class Queue {
 	 * The byte array to return all data sorted
 	 */
 	private byte[] rawData;
-
 	/**
 	 * The index to the first element
 	 */
@@ -37,6 +39,10 @@ public class Queue {
 	 * The current size of the queue
 	 */
 	private int size;
+	/**
+	 * The list of
+	 */
+	private ArrayList<DataListener> dataListeners;
 
 	/**
 	 * Creates a new RawQueue with a specified {@code capacity}
@@ -55,7 +61,7 @@ public class Queue {
 	 *            The byte array
 	 */
 	public Queue(byte[] data) {
-		this(data, data.length, false);
+		this(data, 0, false);
 	}
 
 	/**
@@ -82,6 +88,7 @@ public class Queue {
 	 */
 	public Queue(byte[] data, int size, boolean copy) {
 		setRawData(data, size, copy);
+		this.dataListeners = new ArrayList<DataListener>();
 	}
 
 	/**
@@ -175,14 +182,21 @@ public class Queue {
 					+ " must be greater than from:" + srcFrom);
 		}
 
+		boolean wasFull = isFull();
+
 		// Data overflow
 		if (src.length > capacity) {
 			push(src, srcFrom, srcTo, rawRingData, capacity);
 			head = 0;
-			tail = capacity;
+			tail = 0;
+			size = capacity;
+			if (!wasFull && isFull()) {
+				fireOnFull();
+			}
+			return;
 		}
 
-		int lastData = capacity - tail;
+		int lastData = Math.min(capacity - tail, numberOfBytesToRead);
 		int freeSpace = capacity - size;
 
 		// If the right bound is reached, a src split is needed
@@ -204,6 +218,10 @@ public class Queue {
 
 		size = Math.min(capacity, size + numberOfBytesToRead);
 
+		if (!wasFull && isFull()) {
+			fireOnFull();
+		}
+
 	}
 
 	/**
@@ -221,6 +239,17 @@ public class Queue {
 	 * 
 	 * @param dst
 	 *            The output buffer to store looked data
+	 * @return The number of bytes looked
+	 */
+	public int peek(byte[] dst) {
+		return peek(dst, dst.length);
+	}
+
+	/**
+	 * Looks a the first bytes from the queue
+	 * 
+	 * @param dst
+	 *            The output buffer to store looked data
 	 * @param numberOfElements
 	 *            The number of elements to peek
 	 * @return The number of bytes looked
@@ -230,7 +259,7 @@ public class Queue {
 			return 0;
 		}
 
-		numberOfElements = Math.min(numberOfElements, capacity);
+		numberOfElements = Math.min(numberOfElements, size);
 
 		int lastData = capacity - head;
 		int endIndex = (head + numberOfElements) % capacity;
@@ -258,8 +287,13 @@ public class Queue {
 	public int pop(byte[] dst, int numberOfElements) {
 		numberOfElements = peek(dst, numberOfElements);
 
+		boolean wasEmpty = isEmpty();
 		size -= numberOfElements;
 		head = (head + numberOfElements) % capacity;
+
+		if (!wasEmpty && isEmpty()) {
+			fireOnEmpty();
+		}
 	
 		return numberOfElements;
 	}
@@ -319,7 +353,7 @@ public class Queue {
 
 		this.capacity = data.length;
 		this.size = size;
-		this.tail = size;
+		this.tail = size % capacity;
 
 		if (copy) {
 			// Make a copy of the original
@@ -351,16 +385,6 @@ public class Queue {
 	}
 
 	/**
-	 * Sets the capacity of the queue
-	 * 
-	 * @param capacity
-	 *            The capacity of the queue
-	 */
-	public void setCapacity(int capacity) {
-		this.capacity = capacity;
-	}
-
-	/**
 	 * Checks if the queue is empty
 	 * 
 	 * @return true if is empty, false otherwise
@@ -377,5 +401,42 @@ public class Queue {
 	public boolean isFull() {
 		return size == capacity;
 	}
-}
 
+	/**
+	 * Adds a new dataListener to the listener list
+	 * 
+	 * @param dataListener
+	 *            The DataListener to add
+	 */
+	public void addDataListener(DataListener dataListener) {
+		dataListeners.add(dataListener);
+	}
+
+	/**
+	 * Removes a dataListener from the listener list
+	 * 
+	 * @param dataListener
+	 *            The DataListener to remove
+	 */
+	public void removeDataListener(DataListener dataListener) {
+		dataListeners.remove(dataListener);
+	}
+
+	/**
+	 * Fires the onFull() method for each dataListener
+	 */
+	private void fireOnFull() {
+		for (int i = 0; i < dataListeners.size(); i++) {
+			dataListeners.get(i).onFull();
+		}
+	}
+
+	/**
+	 * Fires the onEmpty() method for each dataListener
+	 */
+	private void fireOnEmpty() {
+		for (int i = 0; i < dataListeners.size(); i++) {
+			dataListeners.get(i).onEmpty();
+		}
+	}
+}
