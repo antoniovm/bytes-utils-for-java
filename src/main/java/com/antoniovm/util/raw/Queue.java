@@ -20,10 +20,6 @@ public class Queue {
 	 */
 	private byte[] rawRingData;
 	/**
-	 * The byte array to return all data sorted
-	 */
-	private byte[] rawData;
-	/**
 	 * The index to the first element
 	 */
 	private int head;
@@ -161,6 +157,32 @@ public class Queue {
 	}
 
 	/**
+	 * Adds the {@code src} with specified {@code from} and {@code to}
+	 * {@code src}'s indexes, when possible
+	 * 
+	 * @param src
+	 *            The byte array to read
+	 */
+	public void add(byte[] src) {
+		add(src, 0, src.length);
+	}
+
+	/**
+	 * Adds the {@code src} with specified {@code from} and {@code to}
+	 * {@code src}'s indexes, when possible
+	 * 
+	 * @param src
+	 *            The byte array to read
+	 * @param srcFrom
+	 *            The start position to read
+	 * @param srcTo
+	 *            The ending position to read
+	 */
+	public void add(byte[] src, int srcFrom, int srcTo) {
+		insert(src, srcFrom, srcTo, false);
+	}
+
+	/**
 	 * Pushes the {@code src} with specified {@code from} and {@code to}
 	 * {@code src}'s indexes
 	 * 
@@ -169,9 +191,26 @@ public class Queue {
 	 * @param srcFrom
 	 *            The start position to read
 	 * @param srcTo
-	 *            The ending position to read.
+	 *            The ending position to read
 	 */
 	public void push(byte[] src, int srcFrom, int srcTo) {
+		insert(src, srcFrom, srcTo, true);
+	}
+
+	/**
+	 * Insertes the {@code src} with specified {@code from} and {@code to}
+	 * {@code src}'s indexes
+	 * 
+	 * @param src
+	 *            The byte array to read
+	 * @param srcFrom
+	 *            The start position to read
+	 * @param srcTo
+	 *            The ending position to read
+	 * @param overwriteOldData
+	 *            Wether the old data is going to be overwritten
+	 */
+	private void insert(byte[] src, int srcFrom, int srcTo, boolean overwriteOldData) {
 
 		// The total number of bytes are going to be read
 		int numberOfBytesToRead = srcTo - srcFrom;
@@ -183,6 +222,15 @@ public class Queue {
 		}
 
 		boolean wasFull = isFull();
+
+		// Ensure that no data is overwritten
+		if (!overwriteOldData) {
+			if (wasFull) {
+				return;
+			}
+			int freeSpace = capacity - size;
+			numberOfBytesToRead = Math.min(freeSpace, numberOfBytesToRead);
+		}
 
 		// Data overflow
 		if (src.length > capacity) {
@@ -310,13 +358,6 @@ public class Queue {
 	}
 
 	/**
-	 * Copy all data in a new array in natural order
-	 */
-	private void setNaturalOrder() {
-		peek(rawData, size);
-	}
-
-	/**
 	 * Restores the initial values for the indexes
 	 */
 	public void clear() {
@@ -327,12 +368,9 @@ public class Queue {
 
 	/**
 	 * Returns the raw data
-	 * 
-	 * @return the data
 	 */
-	public byte[] getRawData() {
-		setNaturalOrder();
-		return rawData;
+	public void getRawData(byte[] data) {
+		peek(data);
 	}
 
 	/**
@@ -363,7 +401,7 @@ public class Queue {
 			// Reference the argument object
 			this.rawRingData = data;
 		}
-		this.rawData = new byte[data.length];
+		// this.rawData = new byte[data.length];
 	}
 
 	/**

@@ -57,10 +57,12 @@ public class QueueTest {
 		Queue qTest = new Queue(test, test.length, true);
 		byte[] newData = { 6, 7 };
 		byte[] expected = { 3, 4, 5, 6, 7 };
+		byte[] out = new byte[test.length];
 
 		qTest.push(newData);
+		qTest.getRawData(out);
 
-		Assert.assertArrayEquals(expected, qTest.getRawData());
+		Assert.assertArrayEquals(expected, out);
 	}
 
 	@Test
@@ -72,6 +74,36 @@ public class QueueTest {
 		Queue.push(newData, test, test.length);
 
 		Assert.assertArrayEquals(expected, test);
+	}
+
+	@Test
+	public void testAddNoFull() {
+		byte[] newData1 = { 1, 2, 3 };
+		byte[] newData2 = { 4, 5, 6 };
+		byte[] expected = { 1, 2, 3, 4, 5 };		
+		Queue qTest = new Queue(5);
+		
+		byte[] out = new byte[qTest.getCapacity()];
+		qTest.add(newData1);
+		qTest.add(newData2);
+		qTest.getRawData(out);
+
+		Assert.assertArrayEquals(expected, out);
+	}
+
+	@Test
+	public void testAddFull() {
+		byte[] newData1 = { 1, 2, 3 };
+		byte[] newData2 = { 4, 5, 6 };
+		byte[] expected = { 1, 2, 3 };
+
+		Queue qTest = new Queue(3);
+		qTest.add(newData1);
+		qTest.add(newData2);
+		byte[] out = new byte[qTest.getCapacity()];
+		qTest.getRawData(out);
+
+		Assert.assertArrayEquals(expected, out);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -103,10 +135,12 @@ public class QueueTest {
 		byte[] expected = { 5, 6, 0, 0, 0, 0 };
 
 		Queue qTest = new Queue(test, test.length);
+		byte[] out = new byte[qTest.getCapacity()];
 		qTest.pop(removedData);
 		qTest.pop(removedData);
+		qTest.getRawData(out);
 
-		Assert.assertArrayEquals(expected, qTest.getRawData());
+		Assert.assertArrayEquals(expected, out);
 		Assert.assertEquals(2, qTest.getSize());
 	}
 
