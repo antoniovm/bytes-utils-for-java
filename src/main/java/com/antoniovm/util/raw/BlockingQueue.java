@@ -52,7 +52,10 @@ public class BlockingQueue extends Queue {
 				e.printStackTrace();
 			}
 		}
-		super.push(src);
+		synchronized (this) {
+			super.push(src);
+		}
+
 		releaseWhenEnoughDataAvailable(src.length, amountOfDataToRelease);
 
 	}
@@ -84,7 +87,12 @@ public class BlockingQueue extends Queue {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		int bytesRemoved = super.pop(dst);
+		int bytesRemoved = 0;
+
+		synchronized (this) {
+			bytesRemoved = super.pop(dst);
+		}
+
 		if (blockingPolicy == PushPolicy.PRESERVE_OLD_DATA) {
 			freeSpaceAvailable.release();
 		}
