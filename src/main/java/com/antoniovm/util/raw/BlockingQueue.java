@@ -12,7 +12,8 @@ import java.util.concurrent.Semaphore;
 public class BlockingQueue extends Queue {
 
 	/**
-	 * This enum classifies the push policy when inserting new data to the Queue
+	 * This enum classifies the push policy when inserting new data into the
+	 * Queue
 	 * 
 	 * @author Antonio Vicente Martin
 	 *
@@ -21,14 +22,28 @@ public class BlockingQueue extends Queue {
 		PRESERVE_OLD_DATA, OVERWRITE_OLD_DATA;
 	}
 
-	private Semaphore freeSpaceAvailable;
-	private Semaphore newDataAvailable;
-	private int totalAmountPushedData;
 	private PushPolicy blockingPolicy;
 
-	public BlockingQueue(byte[] data, PushPolicy blockingPolicy) {
+	private Semaphore freeSpaceAvailable;
+	private Semaphore newDataAvailable;
+
+	private int totalAmountPushedData;
+	private int amountOfDataToRelease;
+
+	/**
+	 * Builds a new BlockingQueue
+	 * 
+	 * @param data
+	 *            The buffer to store the data
+	 * @param blockingPolicy
+	 *            The push policy
+	 * @param amountOfDataToRelease
+	 *            The minimum amount of data to release the data available
+	 *            semaphore
+	 */
+	public BlockingQueue(byte[] data, PushPolicy blockingPolicy, int amountOfDataToRelease) {
 		super(data);
-		init(blockingPolicy);
+		init(blockingPolicy, amountOfDataToRelease);
 	}
 
 	/**
@@ -36,15 +51,25 @@ public class BlockingQueue extends Queue {
 	 * 
 	 * @param pushPolicy
 	 *            The push policy this queue is coing to use
+	 * @param amountOfDataToRelease
+	 *            The minimum amount of data to release the data available
+	 *            semaphore
 	 */
-	private void init(PushPolicy pushPolicy) {
+	private void init(PushPolicy pushPolicy, int amountOfDataToRelease) {
 		this.freeSpaceAvailable = new Semaphore(1);
 		this.newDataAvailable = new Semaphore(0);
 		this.totalAmountPushedData = 0;
 		this.blockingPolicy = pushPolicy;
+		this.amountOfDataToRelease = amountOfDataToRelease;
 	}
 
-	public void push(byte[] src, int amountOfDataToRelease) {
+	/**
+	 * A synced version of Queue.push()
+	 * 
+	 * @param src
+	 *            The data to push
+	 */
+	public void push(byte[] src) {
 		if (blockingPolicy == PushPolicy.PRESERVE_OLD_DATA) {
 			try {
 				freeSpaceAvailable.acquire();
@@ -83,6 +108,7 @@ public class BlockingQueue extends Queue {
 	@Override
 	public int pop(byte[] dst) {
 		try {
+			// Block semaphore to guarantee safe data reading
 			newDataAvailable.acquire();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
@@ -93,6 +119,7 @@ public class BlockingQueue extends Queue {
 			bytesRemoved = super.pop(dst);
 		}
 
+		// If PRESERVE_OLD_DATA is choosen, then free locked treads
 		if (blockingPolicy == PushPolicy.PRESERVE_OLD_DATA) {
 			freeSpaceAvailable.release();
 		}
