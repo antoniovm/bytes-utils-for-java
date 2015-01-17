@@ -33,6 +33,21 @@ public class BlockingQueue extends Queue {
 	/**
 	 * Builds a new BlockingQueue
 	 * 
+	 * @param capacity
+	 *            The initial capacity
+	 * @param blockingPolicy
+	 *            The push policy
+	 * @param amountOfDataToRelease
+	 *            The minimum amount of data to release the data available
+	 *            semaphore
+	 */
+	public BlockingQueue(int capacity, PushPolicy blockingPolicy, int amountOfDataToRelease) {
+		this(new byte[capacity], blockingPolicy, amountOfDataToRelease);
+	}
+
+	/**
+	 * Builds a new BlockingQueue
+	 * 
 	 * @param data
 	 *            The buffer to store the data
 	 * @param blockingPolicy
