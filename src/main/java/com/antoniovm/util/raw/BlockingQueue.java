@@ -96,7 +96,7 @@ public class BlockingQueue extends Queue {
 			super.push(src);
 		}
 
-		releaseWhenEnoughDataAvailable(src.length, amountOfDataToRelease);
+		releaseWhenEnoughDataAvailable(src.length);
 
 	}
 
@@ -105,16 +105,15 @@ public class BlockingQueue extends Queue {
 	 * 
 	 * @param pushedData
 	 *            The amount of data that is being pushed
-	 * @param amountOfDataToRelease
-	 *            The min amount of data to release the semaphore
 	 * @return true if the semaphore was released, false otherwise
 	 */
-	private boolean releaseWhenEnoughDataAvailable(int pushedData, int amountOfDataToRelease) {
+	private boolean releaseWhenEnoughDataAvailable(int pushedData) {
 
-		if ((amountOfDataToRelease < totalAmountPushedData) || (amountOfDataToRelease < getSize())) {
-			totalAmountPushedData += amountOfDataToRelease;
+		if ((totalAmountPushedData < amountOfDataToRelease) && (totalAmountPushedData < getSize())) {
+			totalAmountPushedData += pushedData;
 			return false;
 		}
+		totalAmountPushedData = 0;
 		newDataAvailable.release();
 		return true;
 
