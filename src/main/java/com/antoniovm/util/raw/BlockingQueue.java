@@ -109,8 +109,9 @@ public class BlockingQueue extends Queue {
 	 */
 	private boolean releaseWhenEnoughDataAvailable(int pushedData) {
 
-		if ((totalAmountPushedData < amountOfDataToRelease) && (totalAmountPushedData < getSize())) {
-			totalAmountPushedData += pushedData;
+		int newAmountOfData = totalAmountPushedData + pushedData;
+		if ((newAmountOfData < amountOfDataToRelease) && (newAmountOfData < getSize())) {
+			totalAmountPushedData = newAmountOfData;
 			return false;
 		}
 		totalAmountPushedData = 0;
