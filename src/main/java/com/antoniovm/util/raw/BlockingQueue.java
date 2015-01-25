@@ -94,10 +94,8 @@ public class BlockingQueue extends Queue {
 		}
 		synchronized (this) {
 			super.push(src);
+			releaseWhenEnoughDataAvailable(src.length);
 		}
-
-		releaseWhenEnoughDataAvailable(src.length);
-
 	}
 
 	/**
@@ -132,11 +130,10 @@ public class BlockingQueue extends Queue {
 
 		synchronized (this) {
 			bytesRemoved = super.pop(dst);
-		}
-
-		// If PRESERVE_OLD_DATA is choosen, then free locked treads
-		if (blockingPolicy == PushPolicy.PRESERVE_OLD_DATA) {
-			freeSpaceAvailable.release();
+			// If PRESERVE_OLD_DATA is choosen, then free locked treads
+			if (blockingPolicy == PushPolicy.PRESERVE_OLD_DATA) {
+				freeSpaceAvailable.release();
+			}
 		}
 
 		return bytesRemoved;
