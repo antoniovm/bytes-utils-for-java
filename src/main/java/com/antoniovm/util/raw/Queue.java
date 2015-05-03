@@ -4,7 +4,6 @@ import java.util.ArrayList;
 
 import com.antoniovm.util.event.DataListener;
 
-
 /**
  * This class encapsulates a raw byte queue for handling byte streaming. It
  * stores data in a ring queue but returns it in the natural order (from 0 to
@@ -32,11 +31,15 @@ public class Queue {
 	 */
 	private int capacity;
 	/**
+	 * The initil size of the queue
+	 */
+	private int initialSize;
+	/**
 	 * The current size of the queue
 	 */
 	private int size;
 	/**
-	 * The list of
+	 * The list of listeners
 	 */
 	private ArrayList<DataListener> dataListeners;
 
@@ -96,15 +99,16 @@ public class Queue {
 	 *            The byte array to push
 	 * @param dstSize
 	 *            The number of elements in dst
-	 * @return The number of remaining original bytes. A negative value means that those number of {@code src} bytes are
-	 *         truncated.
+	 * @return The number of remaining original bytes. A negative value means
+	 *         that those number of {@code src} bytes are truncated.
 	 */
 	public static int push(byte[] src, byte[] dst, int dstSize) {
 		return push(src, 0, src.length, dst, dstSize);
 	}
 
 	/**
-	 * Pushes the {@code src} data into {@code dst}, with specified {@code from} and {@code to} {@code src}'s indexes
+	 * Pushes the {@code src} data into {@code dst}, with specified {@code from}
+	 * and {@code to} {@code src}'s indexes
 	 * 
 	 * @param src
 	 *            The byte array to read
@@ -116,8 +120,8 @@ public class Queue {
 	 *            The byte array to push
 	 * @param dstSize
 	 *            The number of elements in dst
-	 * @return The number of remaining original bytes. A negative value means that those number of {@code src} bytes are
-	 *         truncated.
+	 * @return The number of remaining original bytes. A negative value means
+	 *         that those number of {@code src} bytes are truncated.
 	 */
 	public static int push(byte[] src, int srcFrom, int srcTo, byte[] dst, int dstSize) {
 
@@ -132,7 +136,8 @@ public class Queue {
 		// Remaining bytes
 		int remainingBytes = dst.length - numberOfBytesToRead;
 
-		// Truncate data: src{1,2,3,4,5,6,7,8,9,0} -push-> dst{3,2,1} = dst{8,9,0}
+		// Truncate data: src{1,2,3,4,5,6,7,8,9,0} -push-> dst{3,2,1} =
+		// dst{8,9,0}
 		if (numberOfBytesToRead > dst.length) {
 			numberOfBytesToRead = dst.length;
 			srcFrom = srcTo - numberOfBytesToRead;
@@ -143,9 +148,11 @@ public class Queue {
 		// Compute the number of bytes to displace
 		int numberOfBytesToDisplace = (dstSize + numberOfBytesToRead) - dst.length;
 
-		// If a negative value is computed, it means it's not necessary to do a displacement
+		// If a negative value is computed, it means it's not necessary to do a
+		// displacement
 		if (numberOfBytesToDisplace > 0) {
-			// Move old values from ending to starting positions: |12345| = |345--|
+			// Move old values from ending to starting positions: |12345| =
+			// |345--|
 			System.arraycopy(dst, numberOfBytesToDisplace, dst, 0, dstSize - numberOfBytesToDisplace);
 			dstSize -= numberOfBytesToDisplace;
 		}
@@ -217,8 +224,7 @@ public class Queue {
 
 		// Throw an exception in case of bad indexes
 		if (numberOfBytesToRead < 1) {
-			throw new IllegalArgumentException("Bad src indexes. to:" + srcTo
-					+ " must be greater than from:" + srcFrom);
+			throw new IllegalArgumentException("Bad src indexes. to:" + srcTo + " must be greater than from:" + srcFrom);
 		}
 
 		boolean wasFull = isFull();
@@ -273,7 +279,8 @@ public class Queue {
 	}
 
 	/**
-	 * Pushes the {@code src} with specified {@code from} and {@code to} {@code src}'s indexes
+	 * Pushes the {@code src} with specified {@code from} and {@code to}
+	 * {@code src}'s indexes
 	 * 
 	 * @param src
 	 *            The byte array to read
@@ -342,7 +349,7 @@ public class Queue {
 		if (!wasEmpty && isEmpty()) {
 			fireOnEmpty();
 		}
-	
+
 		return numberOfElements;
 	}
 
@@ -385,13 +392,12 @@ public class Queue {
 	public void setRawData(byte[] data, int size, boolean copy) {
 		// Throw an exception if size doesn't match
 		if (size > data.length) {
-			throw new ArrayIndexOutOfBoundsException("size:" + size
-					+ " can't be greater than capacity:" + data.length);
+			throw new ArrayIndexOutOfBoundsException("size:" + size + " can't be greater than capacity:" + data.length);
 		}
 
 		this.capacity = data.length;
-		this.size = size;
-		this.tail = size % capacity;
+		this.initialSize = this.size = size;
+		this.tail = size;
 
 		if (copy) {
 			// Make a copy of the original
@@ -476,5 +482,14 @@ public class Queue {
 		for (int i = 0; i < dataListeners.size(); i++) {
 			dataListeners.get(i).onEmpty();
 		}
+	}
+
+	/**
+	 * Resets the intials bounds values, when the Queue was created
+	 */
+	public void reset() {
+		this.size = this.initialSize;
+		this.tail = size;
+		this.head = 0;
 	}
 }

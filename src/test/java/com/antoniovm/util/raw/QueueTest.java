@@ -3,11 +3,12 @@
  */
 package com.antoniovm.util.raw;
 
+import java.util.Arrays;
+
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.antoniovm.util.event.DataListener;
-
 
 /**
  * 
@@ -80,9 +81,9 @@ public class QueueTest {
 	public void testAddNoFull() {
 		byte[] newData1 = { 1, 2, 3 };
 		byte[] newData2 = { 4, 5, 6 };
-		byte[] expected = { 1, 2, 3, 4, 5 };		
+		byte[] expected = { 1, 2, 3, 4, 5 };
 		Queue qTest = new Queue(5);
-		
+
 		byte[] out = new byte[qTest.getCapacity()];
 		qTest.add(newData1);
 		qTest.add(newData2);
@@ -189,12 +190,29 @@ public class QueueTest {
 
 		});
 
-
 		qTest.pop(removedData);
 		qTest.pop(removedData);
 
 		Assert.assertEquals(true, onEmptyCalled[0]);
 	}
 
+	@Test
+	public void testReset() {
+
+		final boolean[] onEmptyCalled = { false };
+		byte[] removedData = new byte[3];
+		byte[] expected = { 1, 2, 3 };
+		byte[] test = { 1, 2, 3 };
+		Queue qTest = new Queue(test, test.length);
+
+		qTest.pop(removedData);
+		Arrays.fill(removedData, (byte) 0);
+
+		qTest.reset();
+		qTest.pop(removedData);
+
+		Assert.assertArrayEquals(expected, removedData);
+
+	}
 
 }
