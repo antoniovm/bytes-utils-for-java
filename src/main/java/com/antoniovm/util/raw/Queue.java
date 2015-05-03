@@ -310,8 +310,27 @@ public class Queue {
 	 * @return The number of bytes looked
 	 */
 	public int peek(byte[] dst, int numberOfElements) {
+		return peek(dst, numberOfElements, 0);
+	}
+
+	/**
+	 * Looks a the first bytes from the queue
+	 * 
+	 * @param dst
+	 *            The output buffer to store looked data
+	 * @param numberOfElements
+	 *            The number of elements to peek
+	 * @param dstOffset
+	 *            Initial index to write
+	 * @return The number of bytes looked
+	 */
+	public int peek(byte[] dst, int numberOfElements, int dstOffset) {
 		if (isEmpty()) {
 			return 0;
+		}
+
+		if (numberOfElements + dstOffset > dst.length) {
+			throw new ArrayIndexOutOfBoundsException(numberOfElements + dstOffset);
 		}
 
 		numberOfElements = Math.min(numberOfElements, size);
@@ -321,10 +340,10 @@ public class Queue {
 
 		// If ringed, a split copy is needed
 		if (head >= endIndex) {
-			System.arraycopy(rawRingData, head, dst, 0, lastData);
+			System.arraycopy(rawRingData, head, dst, dstOffset, lastData);
 			System.arraycopy(rawRingData, 0, dst, lastData, endIndex);
 		} else {
-			System.arraycopy(rawRingData, head, dst, 0, numberOfElements);
+			System.arraycopy(rawRingData, head, dst, dstOffset, numberOfElements);
 		}
 
 		return numberOfElements;
@@ -340,7 +359,22 @@ public class Queue {
 	 * @return The number of bytes removed
 	 */
 	public int pop(byte[] dst, int numberOfElements) {
-		numberOfElements = peek(dst, numberOfElements);
+		return pop(dst, numberOfElements, 0);
+	}
+
+	/**
+	 * Removes the first bytes from the queue
+	 * 
+	 * @param dst
+	 *            The output buffer to store removed data
+	 * @param numberOfElements
+	 *            The number of elements to pop
+	 * @param dstOffset
+	 *            The destination index offset
+	 * @return The number of bytes removed
+	 */
+	public int pop(byte[] dst, int numberOfElements, int dstOffset) {
+		numberOfElements = peek(dst, numberOfElements, dstOffset);
 
 		boolean wasEmpty = isEmpty();
 		size -= numberOfElements;
@@ -451,9 +485,10 @@ public class Queue {
 	 * 
 	 * @param dataListener
 	 *            The DataListener to add
+	 * @return true (as specified by Collection.add)
 	 */
-	public void addDataListener(DataListener dataListener) {
-		dataListeners.add(dataListener);
+	public boolean addDataListener(DataListener dataListener) {
+		return dataListeners.add(dataListener);
 	}
 
 	/**
@@ -461,9 +496,10 @@ public class Queue {
 	 * 
 	 * @param dataListener
 	 *            The DataListener to remove
+	 * @return true if the element is removed, false otherwise
 	 */
-	public void removeDataListener(DataListener dataListener) {
-		dataListeners.remove(dataListener);
+	public boolean removeDataListener(DataListener dataListener) {
+		return dataListeners.remove(dataListener);
 	}
 
 	/**

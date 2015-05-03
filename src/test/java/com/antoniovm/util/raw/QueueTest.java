@@ -130,6 +130,41 @@ public class QueueTest {
 	}
 
 	@Test
+	public void testPeekEmpty() {
+		byte[] test = { 1, 2 };
+		byte[] peekedData = new byte[3];
+		int expected = 0;
+
+		Queue qTest = new Queue(test, 0);
+		int bytesRead = qTest.peek(peekedData);
+
+		Assert.assertEquals(bytesRead, expected);
+	}
+
+	@Test
+	public void testClear() {
+		byte[] test = { 1, 2 };
+		byte[] peekedData = new byte[3];
+		byte[] expected = { 0, 0, 0 };
+
+		Queue qTest = new Queue(test, test.length);
+		qTest.clear();
+		qTest.peek(peekedData);
+
+		Assert.assertArrayEquals(expected, peekedData);
+	}
+
+	@Test(expected = ArrayIndexOutOfBoundsException.class)
+	public void testPeekArrayIndexOutOfBoundException() {
+		byte[] test = { 1, 2 };
+		byte[] peekedData = new byte[2];
+
+		Queue qTest = new Queue(test, test.length);
+		qTest.peek(peekedData, 2, 1);
+
+	}
+
+	@Test
 	public void testPop() {
 		byte[] test = { 1, 2, 3, 4, 5, 6 };
 		byte[] removedData = new byte[2];
@@ -143,6 +178,18 @@ public class QueueTest {
 
 		Assert.assertArrayEquals(expected, out);
 		Assert.assertEquals(2, qTest.getSize());
+	}
+
+	@Test
+	public void testPartialPop() {
+		byte[] test = { 1, 2, 3, 4, 5, 6 };
+		byte[] removedData = new byte[4];
+		byte[] expected = { 0, 1, 2, 0 };
+
+		Queue qTest = new Queue(test, test.length);
+		qTest.pop(removedData, 2, 1);
+
+		Assert.assertArrayEquals(expected, removedData);
 	}
 
 	@Test
@@ -194,6 +241,32 @@ public class QueueTest {
 		qTest.pop(removedData);
 
 		Assert.assertEquals(true, onEmptyCalled[0]);
+	}
+
+	@Test
+	public void testRemoveDataListener() {
+
+		boolean expected = true;
+		byte[] test = { 1, 2, 3 };
+		Queue qTest = new Queue(test, test.length);
+
+		DataListener dl = new DataListener() {
+
+			@Override
+			public void onFull() {
+			}
+
+			@Override
+			public void onEmpty() {
+
+			}
+
+		};
+
+		qTest.addDataListener(dl);
+		boolean removed = qTest.removeDataListener(dl);
+
+		Assert.assertEquals(expected, removed);
 	}
 
 	@Test
