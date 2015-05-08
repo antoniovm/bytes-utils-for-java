@@ -47,13 +47,52 @@ public class ByteConverterTest {
 		Assert.assertArrayEquals(expected, out);
 	}
 
-	@Test
-	public void testToByteArrayBigEndian() {
+	@Test(expected = ArrayIndexOutOfBoundsException.class)
+	public void testToByteArrayArrayIndexOutOfBoundException() {
 		int test = 0x04030201;
 		byte[] expected = { 1, 2, 3, 4 };
 		byte[] out = new byte[expected.length];
 
-		ByteConverter.toBytesArray(test, out, false);
+		ByteConverter.toBytesArray(test, out, 1, false);
+
+		Assert.assertArrayEquals(expected, out);
+	}
+
+	@Test
+	public void testToByteArrayShortBigEndian() {
+		short test1 = 0x0201;
+		short test2 = 0x0403;
+		byte[] expected = { 1, 2, 3, 4, 0 };
+		byte[] out = new byte[expected.length];
+
+		ByteConverter.toBytesArray(test1, out, false);
+		ByteConverter.toBytesArray(test2, out, 2, false);
+
+		Assert.assertArrayEquals(expected, out);
+	}
+
+	@Test
+	public void testToByteArrayIntBigEndian() {
+		int test1 = 0x04030201;
+		int test2 = 0x08070605;
+		byte[] expected = { 1, 2, 3, 4, 5, 6, 7, 8 };
+		byte[] out = new byte[expected.length];
+
+		ByteConverter.toBytesArray(test1, out, 0, false);
+		ByteConverter.toBytesArray(test2, out, 4, false);
+
+		Assert.assertArrayEquals(expected, out);
+	}
+
+	@Test
+	public void testToByteArrayLongBigEndian() {
+		long test1 = 0x0706050403020100l;
+		long test2 = 0x0f0e0d0c0b0a0908l;
+		byte[] expected = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0 };
+		byte[] out = new byte[expected.length];
+
+		ByteConverter.toBytesArray(test1, out, false);
+		ByteConverter.toBytesArray(test2, out, 8, false);
 
 		Assert.assertArrayEquals(expected, out);
 	}
@@ -83,9 +122,9 @@ public class ByteConverterTest {
 		byte[] test = { 1, 0, 2, 0 };
 		double[] expected = { 1.0, 2.0 };
 		double[] out = new double[2];
-		
+
 		ByteConverter.toDoublesArray(test, 0, 2, out, 0, out.length, false, false);
-		
+
 		Assert.assertArrayEquals(expected, out, 0);
 	}
 
