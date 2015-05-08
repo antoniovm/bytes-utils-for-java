@@ -26,7 +26,35 @@ public class ByteConverter {
 	}
 
 	/**
-	 * Returns a value splitted into a specified byte array
+	 * Returns a value from a primitive splitted into a specified byte array
+	 * 
+	 * @param value
+	 *            The short value to split
+	 * @param bytes
+	 *            The array of bytes to write in
+	 * @param littleEndian
+	 *            The array of bytes endianess
+	 */
+	public static void toBytesArray(short value, byte[] bytes, boolean littleEndian) {
+		toBytesArray(value, bytes, 0, littleEndian);
+	}
+
+	/**
+	 * Returns a value from a primitive splitted into a specified byte array
+	 * 
+	 * @param value
+	 *            The int value to split
+	 * @param bytes
+	 *            The array of bytes to write in
+	 * @param littleEndian
+	 *            The array of bytes endianess
+	 */
+	public static void toBytesArray(int value, byte[] bytes, boolean littleEndian) {
+		toBytesArray(value, bytes, 0, littleEndian);
+	}
+
+	/**
+	 * Returns a value from a primitive splitted into a specified byte array
 	 * 
 	 * @param value
 	 *            The long value to split
@@ -36,11 +64,11 @@ public class ByteConverter {
 	 *            The array of bytes endianess
 	 */
 	public static void toBytesArray(long value, byte[] bytes, boolean littleEndian) {
-		toBytesArray(value, bytes, 0, bytes.length, littleEndian);
+		toBytesArray(value, bytes, 0, littleEndian);
 	}
 
 	/**
-	 * Returns a value splitted into a specified byte array
+	 * Returns a value from a primitive splitted into a specified byte array
 	 * 
 	 * @param value
 	 *            The long value to split
@@ -48,25 +76,72 @@ public class ByteConverter {
 	 *            The array of bytes to write in
 	 * @param start
 	 *            The start iteration index
-	 * @param end
-	 *            The end iterarion index
+	 * @param valueLength
+	 *            The number of bytes of input value
 	 * @param littleEndian
 	 *            The array of bytes endianess
 	 */
-	public static void toBytesArray(long value, byte[] bytes, int start, int end, boolean littleEndian) {
-		int i = start;
-		int sum = 1;
+	private static void toBytesArray(long value, byte[] bytes, int start, int valueLength, boolean littleEndian) {
+		int i = littleEndian ? valueLength - 1 : 0;
+		int sum = littleEndian ? -1 : 1;
+		int end = start + valueLength;
 
-		if (littleEndian) {
-			// Reverse iteration
-			i = end - 1;
-			sum = -1;
+		if (end > bytes.length) {
+			throw new ArrayIndexOutOfBoundsException("array length: " + bytes.length + ", index: " + end);
 		}
 
-		for (int j = start; j < bytes.length && i < end && i >= start; i += sum) {
+		for (int j = start; j < end && i < valueLength && i >= 0; i += sum) {
 			bytes[j++] = getByteAt(value, i);
 		}
 
+	}
+
+	/**
+	 * Returns a value from a primitive splitted into a specified byte array
+	 * 
+	 * @param value
+	 *            The long value to split
+	 * @param bytes
+	 *            The array of bytes to write in
+	 * @param start
+	 *            The start iteration index
+	 * @param littleEndian
+	 *            The array of bytes endianess
+	 */
+	public static void toBytesArray(long value, byte[] bytes, int start, boolean littleEndian) {
+		toBytesArray(value, bytes, start, 8, littleEndian);
+	}
+
+	/**
+	 * Returns a value from a primitive splitted into a specified byte array
+	 * 
+	 * @param value
+	 *            The int value to split
+	 * @param bytes
+	 *            The array of bytes to write in
+	 * @param start
+	 *            The start iteration index
+	 * @param littleEndian
+	 *            The array of bytes endianess
+	 */
+	public static void toBytesArray(int value, byte[] bytes, int start, boolean littleEndian) {
+		toBytesArray(value, bytes, start, 4, littleEndian);
+	}
+
+	/**
+	 * Returns a value from a primitive splitted into a specified byte array
+	 * 
+	 * @param value
+	 *            The short value to split
+	 * @param bytes
+	 *            The array of bytes to write in
+	 * @param start
+	 *            The start iteration index
+	 * @param littleEndian
+	 *            The array of bytes endianess
+	 */
+	public static void toBytesArray(short value, byte[] bytes, int start, boolean littleEndian) {
+		toBytesArray(value, bytes, start, 2, littleEndian);
 	}
 
 	/**
@@ -126,7 +201,7 @@ public class ByteConverter {
 
 		// Preserve sign
 		value += mostSignificativeByte << 8 * (bytesPerValue - 1);
-		
+
 		for (int j = index; j < lastByteIndex && i < bytesPerValue && i >= 0; i += increment) {
 			// The bit 'and' operation is used to get an unsigned value
 			value += (bytes[j++] & 0xFF) << 8 * i;
