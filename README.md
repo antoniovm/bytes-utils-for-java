@@ -1,7 +1,14 @@
-bytes-utils-for-java
-=================
-This is a free library to easy convert raw byte data into primitive types and viceversa, and manage streams in data structures. 
-You can import it and use as a Java library or an Android library.
+# com-antoniovm-util
+
+This is a free library I developed because of the need of some extra functionalities in my projects. These are some of the things you will find out:
+
+ - Easy convert raw byte data into primitive types and viceversa
+ - Manage streams in data structures.
+ - Measure time
+ - Some maths and statistics
+ - Audio stuff and signal generators
+    
+Feel free to download it and use as a Java or an Android library through git submodule.
 
 To use the AndroidStudio gradle module, switch to 'android' branch.
 
