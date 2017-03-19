@@ -12,4 +12,4 @@ Feel free to download it and use as a Java or an Android library through git sub
 
 To use the AndroidStudio gradle module, switch to 'android' branch.
 
-Lincesed under MIT.
+Lincesed under Apache 2.0.
