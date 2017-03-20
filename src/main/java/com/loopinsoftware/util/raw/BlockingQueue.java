@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.antoniovm.util.raw;
+package com.loopinsoftware.util.raw;
 
 import java.util.concurrent.Semaphore;
 
