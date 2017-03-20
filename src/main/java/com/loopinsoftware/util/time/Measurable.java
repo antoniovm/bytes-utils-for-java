@@ -13,24 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.antoniovm.util.event;
+package com.loopinsoftware.util.time;
 
 /**
- * This interaface will be the responsible of handle data events
+ * This interface is an utility to measure the time elapsed by the overriden
+ * measure() method.
  * 
  * @author Antonio Vicente Martin
  *
+ *         Created by Antonio Vicente Martin on 16/05/15.
  */
-public interface DataListener {
+public interface Measurable {
 
-	/**
-	 * Will be called when the data structure gets empty
-	 */
-	public void onFull();
-
-	/**
-	 * Will be called when the data structure gets empty
-	 */
-	public void onEmpty();
+	int measure();
 
 }

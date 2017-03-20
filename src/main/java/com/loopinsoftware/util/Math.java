@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.antoniovm.util;
+package com.loopinsoftware.util;
 
 /*
  * Created by Antonio Vicente Martin on 03/05/15.

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.antoniovm.util.time;
+package com.loopinsoftware.util.time;
 
 /**
  * This class is an utility to measure time.
